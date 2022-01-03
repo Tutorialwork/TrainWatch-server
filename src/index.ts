@@ -39,4 +39,24 @@ app.post('/trains', async (request: Request, response: Response) => {
     }
 });
 
+app.get('/timetable/:stationId/:hour', async (request: Request, response: Response) => {
+    if (request.params.stationId && request.params.hour) {
+        const date: Date = new Date(
+            new Date().getFullYear(),
+            new Date().getMonth(),
+            new Date().getDate(),
+            Number.parseInt(request.params.hour),
+            0
+        );
+
+        const trainRequest: TrainRequest = new TrainRequest(Number.parseInt(request.params.stationId), date);
+
+        const trains: Train[] = await trainRequest.loadData();
+
+        response.send(trains);
+    } else {
+        response.status(400).send();
+    }
+});
+
 app.listen(3500);
