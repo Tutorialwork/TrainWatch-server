@@ -1,0 +1,22 @@
+{
+  "name": "db-api-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/xml2js": "^0.4.9",
+    "nodemon": "^2.0.15",
+    "typescript": "^4.5.4"
+  },
+  "dependencies": {
+    "axios": "^0.24.0",
+    "moment": "^2.29.1",
+    "xml2js": "^0.4.23"
+  }
+}
