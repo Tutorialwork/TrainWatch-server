@@ -26,7 +26,7 @@ app.post('/trains', async (request: Request, response: Response) => {
 
             const foundTrains: Train[] = await train.loadData();
 
-            const foundTrain: Train = foundTrains.filter((train: Train) => train.department.getTime() === department.getTime())[0];
+            const foundTrain: Train = foundTrains.filter((train: Train) => train.departure.getTime() === department.getTime())[0];
 
             if (foundTrain) {
                 trainList.push(foundTrain);

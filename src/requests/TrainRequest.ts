@@ -60,7 +60,7 @@ export class TrainRequest {
                      */
                     if (train) {
                         if (changes['dp'] && changes['dp'][0]['key']) {
-                            train.changedDepartment = moment(changes['dp'][0]['key']['ct'], 'YYMMDDHHmm').toDate();
+                            train.changedDeparture = moment(changes['dp'][0]['key']['ct'], 'YYMMDDHHmm').toDate();
                             train.changedPlatform = changes['dp'][0]['key']['cp'];
                             train.changedStations = changes['dp'][0]['key']['cpth']?.split('|');
                         }
@@ -109,7 +109,7 @@ export class TrainRequest {
                         const departmentObject: any = result['timetable']['s'][i]['dp'][0]['key'];
 
                         const train: Train = {
-                            department: moment(departmentObject['pt'], 'YYMMDDHHmm').toDate(),
+                            departure: moment(departmentObject['pt'], 'YYMMDDHHmm').toDate(),
                             platform: departmentObject['pp'],
                             stations: departmentObject['ppth'].split('|'),
                             trainId: result['timetable']['s'][i]['key']['id'],

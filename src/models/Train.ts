@@ -5,8 +5,8 @@ export interface Train {
     trainType: string;
     trainNumber: number;
     trainLine?: number;
-    department: Date;
-    changedDepartment?: Date;
+    departure: Date;
+    changedDeparture?: Date;
     platform: number;
     changedPlatform?: number;
     stations: string[];
