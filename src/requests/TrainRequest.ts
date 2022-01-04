@@ -92,6 +92,13 @@ export class TrainRequest {
 
         new xml2js.Parser({ attrkey: "key" }).parseString(requestData.data, (error: any, result: any) => {
             if(error === null) {
+                /**
+                 * No timetable found for this request.
+                 * Returning empty array.
+                 */
+                if (result['timetable'].length === 0) {
+                    return [];
+                }
                 for (let i = 0; i < result['timetable']['s'].length; i++) {
                     const tripObject: any = result['timetable']['s'][i]['tl'][0]['key'];
 
