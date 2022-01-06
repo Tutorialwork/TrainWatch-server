@@ -41,9 +41,9 @@ app.post('/trains', async (request: Request, response: Response) => {
 
             const train: TrainRequest = new TrainRequest(requestedTrain.stationId, department);
 
-            const foundTrains: Train[] = await train.loadData();
+            const foundTrains: Train[] = await train.loadData(true);
 
-            const foundTrain: Train = foundTrains.filter((train: Train) => train.departure.getTime() === department.getTime())[0];
+            const foundTrain: Train = foundTrains.filter((train: Train) => new Date(train.departure).getTime() === department.getTime())[0];
 
             if (foundTrain) {
                 trainList.push(foundTrain);
@@ -68,7 +68,7 @@ app.get('/timetable/:stationId/:hour', async (request: Request, response: Respon
 
         const trainRequest: TrainRequest = new TrainRequest(Number.parseInt(request.params.stationId), date);
 
-        const trains: Train[] = await trainRequest.loadData();
+        const trains: Train[] = await trainRequest.loadData(false);
 
         response.send(trains);
     } else {

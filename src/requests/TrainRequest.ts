@@ -5,6 +5,7 @@ import * as xml2js from 'xml2js';
 import moment from 'moment/moment';
 import { TimetableRequest } from '../models/TimetableRequest';
 import { TripStatus } from '../models/TripStatus';
+import * as fs from 'fs';
 
 export class TrainRequest {
 
@@ -17,17 +18,19 @@ export class TrainRequest {
         this.date = date;
     }
 
-    public async loadData(): Promise<Train[]> {
+    public async loadData(fetchChanges: boolean): Promise<Train[]> {
         this.trains = await this.requestTimetable({
             authenticationToken: process.env.DB_API_KEY ?? 'KEY_MISSING',
             date: this.date,
             evaNumber: this.stationId
         });
-        this.trains = await this.requestChanges({
-            authenticationToken: process.env.DB_API_KEY ?? 'KEY_MISSING',
-            evaNumber: this.stationId,
-            trains: this.trains
-        });
+        if (fetchChanges) {
+            this.trains = await this.requestChanges({
+                authenticationToken: process.env.DB_API_KEY ?? 'KEY_MISSING',
+                evaNumber: this.stationId,
+                trains: this.trains
+            });
+        }
 
         return this.trains;
     }
@@ -45,8 +48,7 @@ export class TrainRequest {
                 `https://api.deutschebahn.com/timetables/v1/fchg/${request.evaNumber}`,
                 {
                     headers: {
-                        'Authorization': `Bearer ${request.authenticationToken}`,
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36'
+                        'Authorization': `Bearer ${request.authenticationToken}`
                     }
                 });
 
@@ -86,6 +88,15 @@ export class TrainRequest {
      */
     private async requestTimetable(request: TimetableRequest): Promise<Train[]> {
         const trainList: Train[] = [];
+        const cacheFilePath: string = `cache/${moment(request.date).format('YYMMDDHH')}_${request.evaNumber}.json`
+
+        if (fs.existsSync(cacheFilePath)) {
+            const cache = fs.readFileSync(cacheFilePath, {
+                encoding: 'utf-8'
+            });
+
+            return JSON.parse(cache);
+        }
 
         try {
             const requestData: AxiosResponse = await axios(
@@ -136,6 +147,8 @@ export class TrainRequest {
         } catch (error: any) {
             console.log(error.message);
         }
+
+        fs.writeFileSync(cacheFilePath, JSON.stringify(trainList));
 
         return trainList;
     }
