@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import { TrainRequest } from './requests/TrainRequest';
 import { UserRequest } from './models/UserRequest';
 import { Train } from './models/Train';
@@ -6,9 +6,26 @@ import { Train } from './models/Train';
 const app = express();
 
 app.use(express.json());
+/**
+ * Caught invalid json
+ */
+app.use((error: any, request: Request, response: Response, next: NextFunction) => {
+    if (error.status === 400 && 'body' in error) {
+        return response.status(400).send({ status: 400, message: error.message });
+    }
+    next();
+});
 
 app.post('/trains', async (request: Request, response: Response) => {
     const requestedTrains: UserRequest[] = request.body;
+
+    const iterable: Boolean = !!requestedTrains.forEach;
+    if (!iterable) {
+        return response.status(400).json({
+            status: 400,
+            error: 'A list in the body is expected.'
+        });
+    }
 
     if (requestedTrains) {
         const trainList: Train[] = [];

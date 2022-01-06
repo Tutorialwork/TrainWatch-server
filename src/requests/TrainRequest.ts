@@ -82,51 +82,55 @@ export class TrainRequest {
     private async requestTimetable(request: TimetableRequest): Promise<Train[]> {
         const trainList: Train[] = [];
 
-        const requestData: AxiosResponse = await axios(
-            `https://api.deutschebahn.com/timetables/v1/plan/${request.evaNumber}/${moment(request.date).format('YYMMDD')}/${moment(request.date).format('HH')}`,
-            {
-                headers: {
-                    'Authorization': `Bearer ${request.authenticationToken}`
+        try {
+            const requestData: AxiosResponse = await axios(
+                `https://api.deutschebahn.com/timetables/v1/plan/${request.evaNumber}/${moment(request.date).format('YYMMDD')}/${moment(request.date).format('HH')}`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${request.authenticationToken}`
+                    }
+                });
+
+            new xml2js.Parser({ attrkey: "key" }).parseString(requestData.data, (error: any, result: any) => {
+                if(error === null) {
+                    /**
+                     * No timetable found for this request.
+                     * Returning empty array.
+                     */
+                    if (result['timetable'].length === 0) {
+                        return [];
+                    }
+                    for (let i = 0; i < result['timetable']['s'].length; i++) {
+                        const tripObject: any = result['timetable']['s'][i]['tl'][0]['key'];
+
+                        /**
+                         * Check if train does not end here
+                         */
+                        if (result['timetable']['s'][i]['dp']) {
+                            const departmentObject: any = result['timetable']['s'][i]['dp'][0]['key'];
+
+                            const train: Train = {
+                                departure: moment(departmentObject['pt'], 'YYMMDDHHmm').toDate(),
+                                platform: departmentObject['pp'],
+                                stations: departmentObject['ppth'].split('|'),
+                                trainId: result['timetable']['s'][i]['key']['id'],
+                                trainNumber: tripObject['n'],
+                                trainType: tripObject['c'],
+                                trainLine: departmentObject['l'],
+                                tripStatus: TripStatus.PLANNED,
+                                tripType: tripObject['f']
+                            };
+
+                            trainList.push(train);
+                        }
+                    }
+                } else {
+                    console.log(error);
                 }
             });
-
-        new xml2js.Parser({ attrkey: "key" }).parseString(requestData.data, (error: any, result: any) => {
-            if(error === null) {
-                /**
-                 * No timetable found for this request.
-                 * Returning empty array.
-                 */
-                if (result['timetable'].length === 0) {
-                    return [];
-                }
-                for (let i = 0; i < result['timetable']['s'].length; i++) {
-                    const tripObject: any = result['timetable']['s'][i]['tl'][0]['key'];
-
-                    /**
-                     * Check if train does not end here
-                     */
-                    if (result['timetable']['s'][i]['dp']) {
-                        const departmentObject: any = result['timetable']['s'][i]['dp'][0]['key'];
-
-                        const train: Train = {
-                            departure: moment(departmentObject['pt'], 'YYMMDDHHmm').toDate(),
-                            platform: departmentObject['pp'],
-                            stations: departmentObject['ppth'].split('|'),
-                            trainId: result['timetable']['s'][i]['key']['id'],
-                            trainNumber: tripObject['n'],
-                            trainType: tripObject['c'],
-                            trainLine: departmentObject['l'],
-                            tripStatus: TripStatus.PLANNED,
-                            tripType: tripObject['f']
-                        };
-
-                        trainList.push(train);
-                    }
-                }
-            } else {
-                console.log(error);
-            }
-        });
+        } catch (error: any) {
+            console.log(error.message);
+        }
 
         return trainList;
     }
