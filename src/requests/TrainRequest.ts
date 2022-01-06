@@ -40,36 +40,41 @@ export class TrainRequest {
     private async requestChanges(request: ChangesRequest): Promise<Train[]> {
         const trains: Train[] = request.trains;
 
-        const requestData: AxiosResponse = await axios(
-            `https://api.deutschebahn.com/timetables/v1/fchg/${request.evaNumber}`,
-            {
-                headers: {
-                    'Authorization': `Bearer ${request.authenticationToken}`
-                }
-            });
-
-        new xml2js.Parser({ attrkey: "key" }).parseString(requestData.data, (error: any, result: any) => {
-            if(error === null) {
-                result['timetable']['s'].forEach((changes: any) => {
-                    const currentTrainId: string = changes['key']['id'];
-                    const train: Train | undefined = trains.filter((train: Train) => train.trainId === currentTrainId)[0];
-
-                    /**
-                     * Check if departure object exists and something changed
-                     * And also check if the current train is request (in trains array)
-                     */
-                    if (train) {
-                        if (changes['dp'] && changes['dp'][0]['key']) {
-                            train.changedDeparture = moment(changes['dp'][0]['key']['ct'], 'YYMMDDHHmm').toDate();
-                            train.changedPlatform = changes['dp'][0]['key']['cp'];
-                            train.changedStations = changes['dp'][0]['key']['cpth']?.split('|');
-                        }
+        try {
+            const requestData: AxiosResponse = await axios(
+                `https://api.deutschebahn.com/timetables/v1/fchg/${request.evaNumber}`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${request.authenticationToken}`,
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36'
                     }
                 });
-            } else {
-                console.log(error);
-            }
-        });
+
+            new xml2js.Parser({ attrkey: "key" }).parseString(requestData.data, (error: any, result: any) => {
+                if(error === null) {
+                    result['timetable']['s'].forEach((changes: any) => {
+                        const currentTrainId: string = changes['key']['id'];
+                        const train: Train | undefined = trains.filter((train: Train) => train.trainId === currentTrainId)[0];
+
+                        /**
+                         * Check if departure object exists and something changed
+                         * And also check if the current train is request (in trains array)
+                         */
+                        if (train) {
+                            if (changes['dp'] && changes['dp'][0]['key']) {
+                                train.changedDeparture = moment(changes['dp'][0]['key']['ct'], 'YYMMDDHHmm').toDate();
+                                train.changedPlatform = changes['dp'][0]['key']['cp'];
+                                train.changedStations = changes['dp'][0]['key']['cpth']?.split('|');
+                            }
+                        }
+                    });
+                } else {
+                    console.log(error);
+                }
+            });
+        } catch (error: any) {
+            console.log(error.message);
+        }
 
         return trains;
     }
