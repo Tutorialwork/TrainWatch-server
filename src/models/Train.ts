@@ -1,4 +1,5 @@
 import { TripStatus } from './TripStatus';
+import { Message } from './Message';
 
 export interface Train {
     trainId: string;
@@ -13,4 +14,5 @@ export interface Train {
     changedStations?: string[];
     tripType: string;
     tripStatus: TripStatus;
+    messages?: Message[];
 }

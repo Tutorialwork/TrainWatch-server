@@ -6,6 +6,7 @@ import moment from 'moment/moment';
 import { TimetableRequest } from '../models/TimetableRequest';
 import { TripStatus } from '../models/TripStatus';
 import * as fs from 'fs';
+import { Message } from '../models/Message';
 
 export class TrainRequest {
 
@@ -58,6 +59,11 @@ export class TrainRequest {
                         const currentTrainId: string = changes['key']['id'];
                         const train: Train | undefined = trains.filter((train: Train) => train.trainId === currentTrainId)[0];
 
+                        const messageDescriptionsData = fs.readFileSync('data/message_codes.json', {
+                            encoding: 'utf-8'
+                        });
+                        const messageDescriptions: Message[] = JSON.parse(messageDescriptionsData);
+
                         /**
                          * Check if departure object exists and something changed
                          * And also check if the current train is request (in trains array)
@@ -67,6 +73,17 @@ export class TrainRequest {
                                 train.changedDeparture = moment(changes['dp'][0]['key']['ct'], 'YYMMDDHHmm').toDate();
                                 train.changedPlatform = changes['dp'][0]['key']['cp'];
                                 train.changedStations = changes['dp'][0]['key']['cpth']?.split('|');
+
+                                const messagesObject = changes['dp'][0]['m'];
+                                if (messagesObject) {
+                                    train.messages = [];
+
+                                    messagesObject.forEach((currentMessage: any) => {
+                                        const messageDescription: Message = messageDescriptions.filter((message: Message) => message.code === Number.parseInt(currentMessage['key']['c']))[0];
+
+                                        train.messages?.push(messageDescription);
+                                    });
+                                }
                             }
                         }
                     });
