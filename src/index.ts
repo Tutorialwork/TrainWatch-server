@@ -2,9 +2,13 @@ import express, { NextFunction, Request, Response } from 'express';
 import { TrainRequest } from './requests/TrainRequest';
 import { UserRequest } from './models/UserRequest';
 import { Train } from './models/Train';
+import moment from 'moment';
 
 const app = express();
 
+const cache: any = {};
+
+app.disable('x-powered-by');
 app.use(express.json());
 /**
  * Caught invalid json
@@ -41,7 +45,17 @@ app.post('/trains', async (request: Request, response: Response) => {
 
             const train: TrainRequest = new TrainRequest(requestedTrain.stationId, department);
 
-            const foundTrains: Train[] = await train.loadData(true);
+            const cacheKey: string = requestedTrain.stationId + '_' + moment(new Date()).format('HHmm').toString();
+
+            let foundTrains: Train[] = [];
+
+            if (!cache[cacheKey]) {
+                foundTrains = await train.loadData(true);
+            } else {
+                foundTrains = cache[cacheKey];
+            }
+
+            cache[cacheKey] = foundTrains;
 
             const foundTrain: Train = foundTrains.filter((train: Train) => new Date(train.departure).getTime() === department.getTime())[0];
 
