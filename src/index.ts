@@ -6,7 +6,11 @@ import moment from 'moment';
 
 const app = express();
 
-const cache: any = {};
+let cache: Train[] = [];
+
+setInterval(() => {
+    cache = [];
+}, 60 * 1000);
 
 app.disable('x-powered-by');
 app.use(express.json());
@@ -45,19 +49,20 @@ app.post('/trains', async (request: Request, response: Response) => {
 
             const train: TrainRequest = new TrainRequest(requestedTrain.stationId, department);
 
-            const cacheKey: string = requestedTrain.stationId + '_' + moment(new Date()).format('HHmm').toString();
-
             let foundTrains: Train[] = [];
 
-            if (!cache[cacheKey]) {
+            const foundTrainFromCache: Train = cache.filter((train: Train) => moment(train.departure).format('HHmm') === moment(department).format('HHmm'))[0];
+
+            if (!foundTrainFromCache) {
                 foundTrains = await train.loadData(true);
             } else {
-                foundTrains = cache[cacheKey];
+                trainList.push(foundTrainFromCache);
+                continue;
             }
 
-            cache[cacheKey] = foundTrains;
+            cache.push(...foundTrains);
 
-            const foundTrain: Train = foundTrains.filter((train: Train) => new Date(train.departure).getTime() === department.getTime())[0];
+            const foundTrain: Train = foundTrains.filter((train: Train) => moment(train.departure).format('HHmm') === moment(department).format('HHmm'))[0];
 
             if (foundTrain) {
                 trainList.push(foundTrain);

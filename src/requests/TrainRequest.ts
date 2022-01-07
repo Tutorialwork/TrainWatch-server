@@ -165,6 +165,15 @@ export class TrainRequest {
             });
         } catch (error: any) {
             console.log(error.message);
+
+            /**
+             * If http status is 410 (Gone) retry with tomorrow.
+             */
+            if (error.response.status === 410) {
+                request.date = moment(request.date).add('1', 'days').toDate();
+
+                return await this.requestTimetable(request);
+            }
         }
 
         fs.writeFileSync(cacheFilePath, JSON.stringify(trainList));
