@@ -81,7 +81,9 @@ export class TrainRequest {
                                     messagesObject.forEach((currentMessage: any) => {
                                         const messageDescription: Message = messageDescriptions.filter((message: Message) => message.code === Number.parseInt(currentMessage['key']['c']))[0];
 
-                                        train.messages?.push(messageDescription);
+                                        if (messageDescription) {
+                                            train.messages?.push(messageDescription);
+                                        }
                                     });
                                 }
                             }
