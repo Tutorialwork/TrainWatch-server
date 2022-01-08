@@ -51,7 +51,9 @@ app.post('/trains', async (request: Request, response: Response) => {
 
             let foundTrains: Train[] = [];
 
-            const foundTrainFromCache: Train = cache.filter((train: Train) => moment(train.departure).format('HHmm') === moment(department).format('HHmm'))[0];
+            const foundTrainFromCache: Train = cache.filter(
+                (train: Train) => moment(train.departure).format('HHmm') === moment(department).format('HHmm') && train.trainNumber.toString() === requestedTrain.trainNumber
+            )[0];
 
             if (!foundTrainFromCache) {
                 foundTrains = await train.loadData(true);
@@ -62,7 +64,9 @@ app.post('/trains', async (request: Request, response: Response) => {
 
             cache.push(...foundTrains);
 
-            const foundTrain: Train = foundTrains.filter((train: Train) => moment(train.departure).format('HHmm') === moment(department).format('HHmm'))[0];
+            const foundTrain: Train = foundTrains.filter(
+                (train: Train) => moment(train.departure).format('HHmm') === moment(department).format('HHmm') && train.trainNumber.toString() === requestedTrain.trainNumber
+            )[0];
 
             if (foundTrain) {
                 trainList.push(foundTrain);
