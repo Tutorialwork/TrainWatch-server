@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { TrainDelayHelper } from '../../helper/TrainDelayHelper';
 import { Train } from '../../models/Train';
+import { requestTimetable } from '../../helper/TimetableHelper';
 
 export async function getTimetable(request: Request, response: Response): Promise<void> {
     if (request.params.stationId && request.params.hour) {
@@ -12,9 +12,11 @@ export async function getTimetable(request: Request, response: Response): Promis
             0
         );
 
-        const trainRequest: TrainDelayHelper = new TrainDelayHelper(Number.parseInt(request.params.stationId), date);
-
-        const trains: Train[] = await trainRequest.loadData(false);
+        const stationId = Number.parseInt(request.params.stationId);
+        const trains: Train[] = await requestTimetable({
+            evaNumber: stationId,
+            date: date
+        });
 
         response.send(trains);
     } else {

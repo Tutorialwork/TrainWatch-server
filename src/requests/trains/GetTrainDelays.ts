@@ -1,8 +1,8 @@
 import { UserRequest } from '../../models/UserRequest';
 import { Train } from '../../models/Train';
-import { TrainDelayHelper } from '../../helper/TrainDelayHelper';
-import moment from 'moment/moment';
 import { Request, Response } from 'express';
+import { requestDelayedTrainsForStation } from '../../helper/DelayHelper';
+import { requestTimetable } from '../../helper/TimetableHelper';
 
 let cache: Train[] = [];
 
@@ -34,30 +34,29 @@ export async function getTrainDelays(request: Request, response: Response): Prom
                 requestedTrain.minute
             );
 
-            const train: TrainDelayHelper = new TrainDelayHelper(requestedTrain.stationId, department);
+            const delayedTrains: Train[] = await requestDelayedTrainsForStation(requestedTrain.stationId);
+            const trains: Train[] = await requestTimetable({
+                evaNumber: requestedTrain.stationId,
+                date: department
+            });
 
-            let foundTrains: Train[] = [];
-
-            const foundTrainFromCache: Train = cache.filter(
-                (train: Train) => moment(train.departure).format('HHmm') === moment(department).format('HHmm') && train.trainNumber.toString() === requestedTrain.trainNumber
-            )[0];
-
-            if (!foundTrainFromCache) {
-                foundTrains = await train.loadData(true);
-            } else {
-                trainList.push(foundTrainFromCache);
-                continue;
+            const requestedTrainObject: Train | null = trains.filter((currentTrain: Train) => currentTrain.departure.toISOString() === department.toISOString())[0];
+            if (!requestedTrainObject) {
+                response.status(400).json({
+                    error: 'Train not found',
+                    train: requestedTrain
+                });
+                return;
+            }
+            const requestedDelayedTrainObject: Train | null = delayedTrains.filter((currentTrain: Train) => currentTrain.trainId === requestedTrainObject.trainId)[0];
+            if (requestedDelayedTrainObject) {
+                requestedTrainObject.changedDeparture = requestedDelayedTrainObject.changedDeparture;
+                requestedTrainObject.changedStations = requestedDelayedTrainObject.changedStations;
+                requestedTrainObject.changedPlatform = requestedDelayedTrainObject.changedPlatform;
+                requestedTrainObject.messages = requestedDelayedTrainObject.messages;
             }
 
-            cache.push(...foundTrains);
-
-            const foundTrain: Train = foundTrains.filter(
-                (train: Train) => moment(train.departure).format('HHmm') === moment(department).format('HHmm') && train.trainNumber.toString() === requestedTrain.trainNumber
-            )[0];
-
-            if (foundTrain) {
-                trainList.push(foundTrain);
-            }
+            trainList.push(requestedTrainObject);
         }
 
         response.send(trainList);
