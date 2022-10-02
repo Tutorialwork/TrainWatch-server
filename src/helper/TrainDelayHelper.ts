@@ -8,7 +8,7 @@ import { TripStatus } from '../models/TripStatus';
 import * as fs from 'fs';
 import { Message } from '../models/Message';
 
-export class TrainRequest {
+export class TrainDelayHelper {
 
     private stationId: number;
     private date: Date;
