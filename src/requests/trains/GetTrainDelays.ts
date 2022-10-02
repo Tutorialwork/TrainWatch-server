@@ -42,11 +42,7 @@ export async function getTrainDelays(request: Request, response: Response): Prom
 
             const requestedTrainObject: Train | null = trains.filter((currentTrain: Train) => currentTrain.departure.toISOString() === department.toISOString())[0];
             if (!requestedTrainObject) {
-                response.status(400).json({
-                    error: 'Train not found',
-                    train: requestedTrain
-                });
-                return;
+                continue;
             }
             const requestedDelayedTrainObject: Train | null = delayedTrains.filter((currentTrain: Train) => currentTrain.trainId === requestedTrainObject.trainId)[0];
             if (requestedDelayedTrainObject) {
