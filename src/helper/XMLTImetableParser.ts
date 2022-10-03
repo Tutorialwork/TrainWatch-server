@@ -29,7 +29,7 @@ export function parseXMLTimetable(xml: string, onParsingFinished: (trains: Train
                         platform: departmentObject['pp'],
                         stations: departmentObject['ppth'].split('|'),
                         trainId: result['timetable']['s'][i]['key']['id'],
-                        trainNumber: tripObject['n'],
+                        trainNumber: Number.parseInt(tripObject['n']),
                         trainType: tripObject['c'],
                         trainLine: departmentObject['l'],
                         tripStatus: TripStatus.PLANNED,

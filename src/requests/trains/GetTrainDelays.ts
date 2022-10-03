@@ -40,7 +40,7 @@ export async function getTrainDelays(request: Request, response: Response): Prom
                 date: department
             });
 
-            const requestedTrainObject: Train | null = trains.filter((currentTrain: Train) => currentTrain.departure.toISOString() === department.toISOString())[0];
+            const requestedTrainObject: Train | null = trains.filter((currentTrain: Train) => currentTrain.trainNumber === requestedTrain.trainNumber)[0];
             if (!requestedTrainObject) {
                 continue;
             }
