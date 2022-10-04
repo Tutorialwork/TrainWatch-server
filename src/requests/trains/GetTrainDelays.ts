@@ -3,6 +3,7 @@ import { Train } from '../../models/Train';
 import { Request, Response } from 'express';
 import { requestDelayedTrainsForStation } from '../../helper/DelayHelper';
 import { requestTimetable } from '../../helper/TimetableHelper';
+import { TripStatus } from '../../models/TripStatus';
 
 let cache: Train[] = [];
 
@@ -50,6 +51,9 @@ export async function getTrainDelays(request: Request, response: Response): Prom
                 requestedTrainObject.changedStations = requestedDelayedTrainObject.changedStations;
                 requestedTrainObject.changedPlatform = requestedDelayedTrainObject.changedPlatform;
                 requestedTrainObject.messages = requestedDelayedTrainObject.messages;
+                if (requestedDelayedTrainObject.changedStations?.length === 1 && requestedDelayedTrainObject.changedStations[0] === '') {
+                    requestedTrainObject.tripStatus = TripStatus.CANCELED;
+                }
             }
 
             trainList.push(requestedTrainObject);
