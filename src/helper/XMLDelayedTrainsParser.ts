@@ -44,9 +44,11 @@ export function parseDelayedTrains(xml: string, onParsingFinished: (trains: Trai
                             const messageDescription: Message = messageDescriptions.filter((message: Message) => message.code === Number.parseInt(currentMessage['key']['c']))[0];
 
                             if (messageDescription) {
+                                messageDescription.createdAt = moment(currentMessage['key']['ts'], 'YYMMDDHHmm').toDate();
                                 train.messages?.push(messageDescription);
                             }
                         });
+                        train.messages = train.messages.sort((messageA: Message, messageB: Message) => messageB.createdAt.getTime() - messageA.createdAt.getTime());
                     }
                 }
             });
