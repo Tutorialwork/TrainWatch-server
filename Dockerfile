@@ -2,6 +2,8 @@ FROM node:16-alpine
 
 RUN apk add tzdata && cp /usr/share/zoneinfo/Europe/Berlin /etc/localtime
 
+RUN apk add --no-cache curl
+
 WORKDIR /usr/src/app
 
 COPY package.json .
